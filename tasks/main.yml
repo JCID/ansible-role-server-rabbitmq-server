@@ -1,0 +1,33 @@
+---
+- name:            Installeren RabbitMQ key
+  rpm_key:         key=http://www.rabbitmq.com/rabbitmq-signing-key-public.asc
+                   state=present
+  notify:          Restart RabbitMQ
+
+- name:            Installeren RabbitMQ
+  yum:             name={{ rabbitmq_url }}
+                   state=present
+  notify:          Restart RabbitMQ
+
+- name:            Starten RabbitMQ
+  service:         name=rabbitmq-server
+                   state=started
+
+- name:            Toevoegen management plugin
+  rabbitmq_plugin: names=rabbitmq_management
+                   state=enabled
+
+- name:            Verwijderen RabbitMQ guest user
+  rabbitmq_user:   user=guest
+                   state=absent
+
+- name:            Default vhost verwijderen
+  rabbitmq_vhost:  name=/
+                   state=absent
+
+- name:            Afronden RabbitMQ
+  shell:           "{{ item }}"
+  changed_when:    false
+  with_items:
+   - /sbin/chkconfig --add rabbitmq-server
+   - /sbin/chkconfig rabbitmq-server on
